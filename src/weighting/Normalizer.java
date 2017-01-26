@@ -1,8 +1,11 @@
 package weighting;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import br.ufpe.cin.dsoa.api.service.Constraint;
+import br.ufpe.cin.dsoa.api.service.RelationalOperator;
 import br.ufpe.cin.dsoa.api.service.ServiceInstance;
 
 public class Normalizer {
@@ -12,38 +15,170 @@ public class Normalizer {
 
 		double matrix[][] = new double[candidates.size()][constraints.size()];
 
-		for (int x = 0; x < constraints.size(); x++) {
+		for (int indexCandidate = 0; indexCandidate < candidates.size(); indexCandidate++) {
+			ServiceInstance candidate = candidates.get(indexCandidate);
+			List<Constraint> candidateConstraints = candidate.getPort().getServiceSpecification().getNonFunctionalSpecification().getConstraints();
 			
-			System.out.println(":: CONSTRAINT" + constraints.get(x) + " ::");
-			for (int y = 0; y < candidates.size(); y++) {
-				
-				ServiceInstance candidate = candidates.get(y);
-				System.out.println(":: CANDIDATE " + candidate.getName() + " ::");
-				List<Constraint> candidateConstraints = candidate.getPort().getServiceSpecification().getNonFunctionalSpecification().getConstraints();
-				for(Constraint c : candidateConstraints){
-					System.out.println("attr: " + c.getAttributeId());
-					System.out.println("op: " + c.getOperation());
-					System.out.println("th: " + c.getThreashold());
-					System.out.println("w: " + c.getWeight());
-					System.out.println("ro: " + c.getExpression());
-					System.out.println();
-					System.out.println("=======================");
-				}
-				System.out.println();
-				System.out.println();
+			Map<String, Constraint> mapConstraint = toMap(candidateConstraints);
+
+			for (int indexConstraint = 0; indexConstraint < constraints.size(); indexConstraint++) {
+				Constraint requiredConstraint = constraints.get(indexConstraint);
+				matrix[indexCandidate][indexConstraint] = mapConstraint.get(constraintKey(requiredConstraint)).getThreashold(); 
 			}
 		}
+
 		return matrix;
 	}
+	
+	public static double[][] nomalizeMatrix(double[][] matrix, double[]min, double[]max, List<Constraint> constraints){
+		
+		double[][] normalized = new double[matrix.length][matrix[0].length];
+		
+		for(int y = 0; y < matrix[0].length; y++){
+			RelationalOperator expression = constraints.get(y).getExpression(); 
+			
+			for(int x=0; x < matrix.length; x++){
+				
+				if(expression.equals(RelationalOperator.LT) || expression.equals(RelationalOperator.LE)) {
+					if(max[y]-min[y] == 0){
+						normalized[x][y] = 1;
+					} else {
+						normalized[x][y] = (max[y]-matrix[x][y])/(max[y]-min[y]);
+					}
+				} else if(expression.equals(RelationalOperator.GT) || expression.equals(RelationalOperator.GE)) {
+					if(max[y]-min[y] == 0){
+						normalized[x][y] = 1;
+					} else { 
+						normalized[x][y] = (matrix[x][y]-min[y])/(max[y]-min[y]);
+					}
+				} else {
+					normalized[x][y] = 1;
+				}
+			}
+		}
+		
+		return normalized;
+	}
+	
+	public static double[] min(double[][] matrix){
+		double min[] = new double[matrix[0].length];
+		
+		for(int x=0; x < min.length; x++){
+			double minValue = Double.MAX_VALUE;
+			
+			for(int y = 0; y < matrix.length; y++){
+				if(matrix[x][y] < minValue){
+					minValue = matrix[x][y];
+					min[x] = minValue;
+				}
+			}
+		}
+		
+		return min;
+	}
+	
+	public static double[] max(double[][] matrix){
+		double max[] = new double[matrix[0].length];
+		
+		for(int x=0; x < max.length; x++){
+			double maxValue = Double.MIN_VALUE;
+			
+			for(int y = 0; y < matrix.length; y++){
+				if(matrix[x][y] > maxValue){
+					maxValue = matrix[x][y];
+					max[x] = maxValue;
+				}
+			}
+		}
+		
+		return max;
+	}
 
-	/*private Map<String, Constraint> toMap(List<Constraint> constraints) {
+	/**
+	 * <qos.responsetime.getCotation, Constraint>
+	 * <qos.availability, Constraint>
+	 * 
+	 * @param constraints
+	 * @return
+	 */
+	public static Map<String, Constraint> toMap(List<Constraint> constraints) {
 
 		Map<String, Constraint> map = new HashMap<String, Constraint>();
 
 		for (Constraint constraint : constraints) {
-			
+			map.put(constraintKey(constraint), constraint);
+		}
+		return map;
+	}
+
+	public static String constraintKey(Constraint constraint) {
+		String key = "";
+		if (constraint.getOperation() != null && !constraint.getOperation().isEmpty()) {
+			key = String.format("%s.%s", constraint.getAttributeId(), constraint.getOperation());
+		} else {
+			key = constraint.getAttributeId();
 		}
 
-		return map;
-	}*/
+		return key;
+	}
+	
+	
+	
+public static double[][] nomalizeMatrix(double[][] matrix, double[]min, double[]max){
+		
+		double[][] normalized = new double[matrix.length][matrix[0].length];
+		
+		for(int y = 0; y < matrix[0].length; y++){
+			RelationalOperator expression = RelationalOperator.LT; 
+			
+			for(int x=0; x < matrix.length; x++){
+				
+				if(expression.equals(RelationalOperator.LT) || expression.equals(RelationalOperator.LE)) {
+					if(max[y]-min[y] == 0){
+						normalized[x][y] = 1;
+					} else {				;
+						normalized[x][y] = (max[y]-matrix[x][y])/(max[y]-min[y]);
+						System.out.println(normalized[x][y]);
+					}
+				} else if(expression.equals(RelationalOperator.GT) || expression.equals(RelationalOperator.GE)) {
+					if(max[y]-min[y] == 0){
+						normalized[x][y] = 1;
+					} else { 
+						normalized[x][y] = (matrix[x][y]-min[y])/(max[y]-min[y]);
+					}
+				} else {
+					normalized[x][y] = 1;
+				}
+			}
+		}
+		
+		return normalized;
+	}
+
+
+	public static void main(String[] args) {
+		double [][]m = new double[3][3];
+		m[0][0] = 20;
+		m[0][1] = 25;
+		m[0][2] = 15;
+		m[1][0] = 90;
+		m[1][1] = 95;
+		m[1][2] = 100;
+		m[2][0] = 30;
+		m[2][1] = 40;
+		m[2][2] = 50;
+		
+		
+		double [][]n = nomalizeMatrix(m, min(m), max(m));
+		
+		
+		for(int x = 0; x < n.length; x++) {
+			for(int y = 0; y < n[0].length; y++) {
+				System.out.print(n[x][y]+ "   ");
+			}
+			System.out.println();
+		}
+		
+				
+	}
 }
