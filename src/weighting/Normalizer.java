@@ -26,11 +26,14 @@ public class Normalizer {
 				matrix[indexCandidate][indexConstraint] = mapConstraint.get(constraintKey(requiredConstraint)).getThreashold(); 
 			}
 		}
-
-		return matrix;
-	}
 	
-	public static double[][] nomalizeMatrix(double[][] matrix, double[]min, double[]max, List<Constraint> constraints){
+		double[][] normalized = new double[candidates.size()][constraints.size()];
+		normalized = normalizeMatrix(matrix, min(matrix), max(matrix), constraints);
+		
+		return normalized;
+	};
+	
+	public static double[][] normalizeMatrix(double[][] matrix, double[]min, double[]max, List<Constraint> constraints){
 		
 		double[][] normalized = new double[matrix.length][matrix[0].length];
 		
@@ -40,16 +43,16 @@ public class Normalizer {
 			for(int x=0; x < matrix.length; x++){
 				
 				if(expression.equals(RelationalOperator.LT) || expression.equals(RelationalOperator.LE)) {
-					if(max[y]-min[y] == 0){
+					if(max[x]-min[x] == 0){
 						normalized[x][y] = 1;
-					} else {
-						normalized[x][y] = (max[y]-matrix[x][y])/(max[y]-min[y]);
+					} else {				;
+						normalized[x][y] = (max[x]-matrix[x][y])/(max[x]-min[x]);
 					}
 				} else if(expression.equals(RelationalOperator.GT) || expression.equals(RelationalOperator.GE)) {
-					if(max[y]-min[y] == 0){
+					if(max[x]-min[x] == 0){
 						normalized[x][y] = 1;
 					} else { 
-						normalized[x][y] = (matrix[x][y]-min[y])/(max[y]-min[y]);
+						normalized[x][y] = (matrix[x][y]-min[x])/(max[x]-min[x]);
 					}
 				} else {
 					normalized[x][y] = 1;
@@ -120,65 +123,5 @@ public class Normalizer {
 		}
 
 		return key;
-	}
-	
-	
-	
-public static double[][] nomalizeMatrix(double[][] matrix, double[]min, double[]max){
-		
-		double[][] normalized = new double[matrix.length][matrix[0].length];
-		
-		for(int y = 0; y < matrix[0].length; y++){
-			RelationalOperator expression = RelationalOperator.LT; 
-			
-			for(int x=0; x < matrix.length; x++){
-				
-				if(expression.equals(RelationalOperator.LT) || expression.equals(RelationalOperator.LE)) {
-					if(max[y]-min[y] == 0){
-						normalized[x][y] = 1;
-					} else {				;
-						normalized[x][y] = (max[y]-matrix[x][y])/(max[y]-min[y]);
-						System.out.println(normalized[x][y]);
-					}
-				} else if(expression.equals(RelationalOperator.GT) || expression.equals(RelationalOperator.GE)) {
-					if(max[y]-min[y] == 0){
-						normalized[x][y] = 1;
-					} else { 
-						normalized[x][y] = (matrix[x][y]-min[y])/(max[y]-min[y]);
-					}
-				} else {
-					normalized[x][y] = 1;
-				}
-			}
-		}
-		
-		return normalized;
-	}
-
-
-	public static void main(String[] args) {
-		double [][]m = new double[3][3];
-		m[0][0] = 20;
-		m[0][1] = 25;
-		m[0][2] = 15;
-		m[1][0] = 90;
-		m[1][1] = 95;
-		m[1][2] = 100;
-		m[2][0] = 30;
-		m[2][1] = 40;
-		m[2][2] = 50;
-		
-		
-		double [][]n = nomalizeMatrix(m, min(m), max(m));
-		
-		
-		for(int x = 0; x < n.length; x++) {
-			for(int y = 0; y < n[0].length; y++) {
-				System.out.print(n[x][y]+ "   ");
-			}
-			System.out.println();
-		}
-		
-				
 	}
 }
