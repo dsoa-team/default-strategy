@@ -43,16 +43,16 @@ public class Normalizer {
 			for(int x=0; x < matrix.length; x++){
 				
 				if(expression.equals(RelationalOperator.LT) || expression.equals(RelationalOperator.LE)) {
-					if(max[x]-min[x] == 0){
+					if(max[y]-min[y] == 0){
 						normalized[x][y] = 1;
 					} else {				;
-						normalized[x][y] = (max[x]-matrix[x][y])/(max[x]-min[x]);
+						normalized[x][y] = (max[y]-matrix[x][y])/(max[y]-min[y]);
 					}
 				} else if(expression.equals(RelationalOperator.GT) || expression.equals(RelationalOperator.GE)) {
-					if(max[x]-min[x] == 0){
+					if(max[y]-min[y] == 0){
 						normalized[x][y] = 1;
 					} else { 
-						normalized[x][y] = (matrix[x][y]-min[x])/(max[x]-min[x]);
+						normalized[x][y] = (matrix[x][y]-min[y])/(max[y]-min[y]);
 					}
 				} else {
 					normalized[x][y] = 1;
@@ -70,8 +70,8 @@ public class Normalizer {
 			double minValue = Double.MAX_VALUE;
 			
 			for(int y = 0; y < matrix.length; y++){
-				if(matrix[x][y] < minValue){
-					minValue = matrix[x][y];
+				if(matrix[y][x] < minValue){
+					minValue = matrix[y][x];
 					min[x] = minValue;
 				}
 			}
@@ -87,8 +87,8 @@ public class Normalizer {
 			double maxValue = Double.MIN_VALUE;
 			
 			for(int y = 0; y < matrix.length; y++){
-				if(matrix[x][y] > maxValue){
-					maxValue = matrix[x][y];
+				if(matrix[y][x] > maxValue){
+					maxValue = matrix[y][x];
 					max[x] = maxValue;
 				}
 			}
